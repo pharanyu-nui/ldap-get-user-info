@@ -1,0 +1,1 @@
+Use to testing get users info from LDAP server.
