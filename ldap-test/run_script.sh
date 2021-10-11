@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 python3 ldap_get_info.py --host="openldap" \
   --port="389" \
