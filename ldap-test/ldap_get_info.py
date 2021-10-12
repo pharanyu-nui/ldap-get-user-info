@@ -1,6 +1,7 @@
 from ldap3 import Server, Connection, ALL
 import argparse
 
+
 def get_args():
     parser = argparse.ArgumentParser(description='Get users info from LDAP server.')
     parser.add_argument('--host', help='IP or Host name', type=str, required=True)
@@ -10,6 +11,7 @@ def get_args():
     parser.add_argument('--base', help='LDAP base ex. dc=example,dc=com"', type=str, required=True)
     args = vars(parser.parse_args())
     return args
+
 
 def write_result(server, conn):
     with open('result.txt', 'w') as f:
@@ -23,6 +25,7 @@ def write_result(server, conn):
         for entry in conn.entries:
             print(entry, file=f)
     print('write data to "result.txt"')
+
 
 def main():
     args = get_args()
@@ -40,9 +43,13 @@ def main():
         server, 
         f'cn={LDAP_USER},{LDAP_SEARCH_BASE}', 
         LDAP_PASSWORD, 
-        auto_bind=True
+        auto_bind=False,
+        raise_exceptions=True,
     )
     print(f'connect success')
+
+    conn.bind()
+    print(f'bind success')
 
     conn.search(
         LDAP_SEARCH_BASE, 
