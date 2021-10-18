@@ -1,5 +1,6 @@
 from ldap3 import Server, Connection, ALL
 import argparse
+import json
 
 
 def get_args():
@@ -13,19 +14,41 @@ def get_args():
     return args
 
 
-def write_result(server, conn):
-    with open('result.txt', 'w') as f:
-        print('=== conn ===', file=f)
+def write_connection_info(conn):
+    file_path = 'results/connection_info.txt'
+    with open(file_path, 'w') as f:
         print(conn, file=f)
+    print(f'>>> write connection info to "{file_path}"')
 
-        print('\n=== server info ===', file=f)
-        print(server.info, file=f)
 
-        print(f'\n=== people, found {len(conn.entries)} ===', file=f)
+def write_bind_result(result, bind_success):
+    file_path = 'results/bind_result.json'
+    with open(file_path, 'w') as f:
+        json.dump(result, f, indent=2)
+    if bind_success:
+        print(f'>>> bind success, write bind result to "{file_path}"')
+    else:
+        print(f'>>> bind failed, write bind result to "{file_path}"')
+
+
+def write_server_info(server: Server, conn):
+    file_path = 'results/server_info.json'
+    server.info.to_file(file_path)
+    print(f'>>> write server info to "{file_path}"')
+
+    file_path = 'results/server_schema.json'
+    server.schema.to_file(file_path)
+    print(f'>>> write server schema to "{file_path}"')
+
+
+def write_users_info(conn):
+    file_path = 'results/users_info.txt'
+    with open(file_path, 'w') as f:
+        print(f'\n=== users, found {len(conn.entries)} ===', file=f)
         for entry in conn.entries:
             print(entry, file=f)
-    print('write data to "result.txt"')
-
+    print(f'>>> write users info to "{file_path}"')
+    
 
 def main():
     args = get_args()
@@ -48,12 +71,18 @@ def main():
         LDAP_USER, 
         LDAP_PASSWORD, 
         auto_bind=False,
-        raise_exceptions=True,
+        raise_exceptions=False,
     )
-    print(f'connect success')
+    conn.open()
+    print(f'>>> connect success')
+    write_connection_info(conn)
 
-    conn.bind()
-    print(f'bind success')
+    bind_success = conn.bind()
+    write_bind_result(conn.result, bind_success)
+    if not bind_success:
+        return
+
+    write_server_info(server, conn)
 
     conn.search(
         SEARCH_BASE, 
@@ -61,9 +90,10 @@ def main():
         attributes=SEARCH_ATTRIBUTES, 
         size_limit=SEARCH_SIZE_LIMIT,
     )
-    print(f'search success found {len(conn.entries)}')
+    print(f'>>> search success found {len(conn.entries)}')
+    write_users_info(conn)
 
-    write_result(server, conn)
+    conn.unbind()
 
 
 if __name__ == '__main__':
