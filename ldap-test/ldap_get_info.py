@@ -1,6 +1,7 @@
 from ldap3 import Server, Connection, ALL
 import argparse
 import json
+import os
 
 
 def get_args():
@@ -48,9 +49,17 @@ def write_users_info(conn):
         for entry in conn.entries:
             print(entry, file=f)
     print(f'>>> write users info to "{file_path}"')
+
+
+def create_output_dir():
+    dir_path = './results'
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
     
 
 def main():
+    create_output_dir()
+    
     args = get_args()
 
     LDAP_HOST = args['host']
